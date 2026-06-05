@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "Usuario": {
+      "title": "Usuario",
+      "description": "Database representation of micro SaaS licensing credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "hash": { "type": "string" },
+        "expiraEm": { "type": "string" },
+        "businessName": { "type": "string" }
+      },
+      "required": ["id", "username", "hash", "expiraEm"]
+    },
+    "Insumo": {
+      "title": "Insumo",
+      "description": "Raw material used to bake items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "quantidadeMinima": { "type": "number" },
+        "quantidadeAtual": { "type": "number" },
+        "unidade": { "type": "string" },
+        "precoCusto": { "type": "number" },
+        "ultimaCompra": { "type": "string" },
+        "categoria": { "type": "string" }
+      },
+      "required": ["id", "nome", "quantidadeMinima", "quantidadeAtual", "unidade", "precoCusto", "ultimaCompra", "categoria"]
+    },
+    "Produto": {
+      "title": "Produto",
+      "description": "Baked end-product composed of ingredients/raw materials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "precoVenda": { "type": "number" },
+        "margemLucro": { "type": "number" },
+        "estoqueAtual": { "type": "number" },
+        "ingredientes": {
+          "type": "array",
+          "description": "List of components with amounts"
+        }
+      },
+      "required": ["id", "nome", "precoVenda", "ingredientes"]
+    },
+    "Venda": {
+      "title": "Venda",
+      "description": "Historic sale details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "data": { "type": "string" },
+        "totalVenda": { "type": "number" },
+        "produtoId": { "type": "string" },
+        "nomeProduto": { "type": "string" },
+        "quantidade": { "type": "number" },
+        "unidade": { "type": "string" },
+        "categoria": { "type": "string" },
+        "produtosVendidos": {
+          "type": "array"
+        }
+      },
+      "required": ["id", "data", "totalVenda"]
+    }
+  },
+  "firestore": {
+    "/usuarios/{usuarioId}": {
+      "schema": "Usuario",
+      "description": "Registered SaaS accounts"
+    },
+    "/usuarios/{usuarioId}/insumos/{insumoId}": {
+      "schema": "Insumo",
+      "description": "User specific raw materials"
+    },
+    "/usuarios/{usuarioId}/produtos/{produtoId}": {
+      "schema": "Produto",
+      "description": "User specific custom baked product recipes"
+    },
+    "/usuarios/{usuarioId}/vendas/{vendaId}": {
+      "schema": "Venda",
+      "description": "User specific checkout histories"
+    }
+  }
+}

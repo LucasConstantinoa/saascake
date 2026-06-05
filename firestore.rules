@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper validation rules for IDs and integrity
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    // Custom accounts collection
+    match /usuarios/{usuarioId} {
+      allow get, create, update, delete: if isValidId(usuarioId);
+      allow list: if true;
+
+      // Scoped Subcollections per active user sandbox
+      match /insumos/{insumoId} {
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(insumoId);
+        allow list: if isValidId(usuarioId);
+      }
+
+      match /produtos/{produtoId} {
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(produtoId);
+        allow list: if isValidId(usuarioId);
+      }
+
+      match /vendas/{vendaId} {
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(vendaId);
+        allow list: if isValidId(usuarioId);
+      }
+    }
+  }
+}

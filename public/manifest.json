@@ -1,0 +1,22 @@
+{
+  "short_name": "GestãoEstoque",
+  "name": "Gestão de Estocagem e Custos Gourmet",
+  "description": "Módulo inteligente de previsão de estoque, custos e ROI para MicroSaaS de alimentação e cafés artesanais.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='192' height='192'><rect width='512' height='512' rx='128' fill='%23000000'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2330D158' stroke-width='40'/><path d='M180 256 l50 50 l100 -100' fill='none' stroke='%2330D158' stroke-width='40' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='128' fill='%23000000'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2330D158' stroke-width='40'/><path d='M180 256 l50 50 l100 -100' fill='none' stroke='%2330D158' stroke-width='40' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#000000",
+  "theme_color": "#0a84ff",
+  "display": "standalone",
+  "orientation": "portrait"
+}
