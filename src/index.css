@@ -1,8 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;805&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Optimize touch responsiveness and gesture delays on mobile screens */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent elastic scroll bouncing on the root html/body viewport */
+html, body {
+  overflow: hidden;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Custom visual scrollbar optimizations for dynamic sheets */
@@ -19,3 +40,4 @@
   mask-image: linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
   -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
 }
+

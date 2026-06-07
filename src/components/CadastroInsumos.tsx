@@ -247,7 +247,7 @@ export default function CadastroInsumos({
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Chocolate Belga 54%"
-                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                   />
                 </div>
 
@@ -258,7 +258,7 @@ export default function CadastroInsumos({
                     id="form-ins-unit"
                     value={unidadeMedida}
                     onChange={(e) => setUnidadeMedida(e.target.value as any)}
-                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF] text-white"
+                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] text-white"
                   >
                     {UNIDADES_PRESSET.map((u) => (
                       <option key={u.id} value={u.id}>
@@ -280,7 +280,7 @@ export default function CadastroInsumos({
                       value={precoCompra}
                       onChange={(e) => setPrecoCompra(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                     />
                   </div>
 
@@ -294,7 +294,7 @@ export default function CadastroInsumos({
                       value={quantidadeCompra}
                       onChange={(e) => setQuantidadeCompra(e.target.value)}
                       placeholder="Ex: 500 ou 1"
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                     />
                   </div>
                 </div>

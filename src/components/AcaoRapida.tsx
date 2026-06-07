@@ -370,7 +370,7 @@ export default function AcaoRapida({
                             <select
                               value={vendaProdutoId}
                               onChange={(e) => setVendaProdutoId(e.target.value)}
-                              className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#0A84FF] font-semibold"
+                              className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-[#0A84FF] font-semibold"
                             >
                               {produtos.map(p => (
                                 <option key={p.id} value={p.id}>
@@ -391,7 +391,7 @@ export default function AcaoRapida({
                                 onChange={(e) => setVendaQtd(e.target.value)}
                                 min="1"
                                 placeholder="1"
-                                className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF] text-white font-bold"
+                                className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] text-white font-bold"
                               />
                             </div>
 
@@ -405,7 +405,7 @@ export default function AcaoRapida({
                                 value={vendaPreco}
                                 onChange={(e) => setVendaPreco(e.target.value)}
                                 placeholder="0.00"
-                                className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF] text-white font-semibold"
+                                className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] text-white font-semibold"
                               />
                             </div>
                           </div>
@@ -469,7 +469,7 @@ export default function AcaoRapida({
                           value={insumoNome}
                           onChange={(e) => setInsumoNome(e.target.value)}
                           placeholder="Ex: Leite Integral"
-                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#30D158] text-white"
+                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#30D158] text-white"
                         />
                       </div>
 
@@ -484,7 +484,7 @@ export default function AcaoRapida({
                             value={insumoPreco}
                             onChange={(e) => setInsumoPreco(e.target.value)}
                             placeholder="0.00"
-                            className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#30D158] text-white font-bold"
+                            className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#30D158] text-white font-bold"
                           />
                         </div>
 
@@ -498,7 +498,7 @@ export default function AcaoRapida({
                             value={insumoQtd}
                             onChange={(e) => setInsumoQtd(e.target.value)}
                             placeholder="Ex: 1000"
-                            className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#30D158] text-white font-bold"
+                            className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#30D158] text-white font-bold"
                           />
                         </div>
                       </div>
@@ -509,7 +509,7 @@ export default function AcaoRapida({
                         <select
                           value={insumoUnidade}
                           onChange={(e) => setInsumoUnidade(e.target.value as any)}
-                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#30D158] font-semibold"
+                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-[#30D158] font-semibold"
                         >
                           <option value="g">Gramas (g)</option>
                           <option value="kg">Quilos (kg)</option>
@@ -559,7 +559,7 @@ export default function AcaoRapida({
                             <select
                               value={estProdutoId}
                               onChange={(e) => setEstProdutoId(e.target.value)}
-                              className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-400 font-semibold"
+                              className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-orange-400 font-semibold"
                             >
                               {produtos.map(p => (
                                 <option key={p.id} value={p.id}>

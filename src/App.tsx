@@ -17,7 +17,8 @@ import { Insumo, Produto, Venda, Usuario } from './types';
 import { INSUMOS_INICIAIS, PRODUTOS_INICIAIS, VENDAS_INICIAIS } from './dadosIniciais';
 import { TrendingUp, Package, Layers, Receipt, BarChart3 } from 'lucide-react';
 import { db, handleFirestoreError, OperationType } from './db/firebase';
-import { collection, doc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { setDoc, deleteDoc, subscribeToQueue, mergePendingQueue, mergePendingProfile, PendingWrite } from './db/syncManager';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('destaques');
@@ -29,6 +30,27 @@ export default function App() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [businessName, setBusinessName] = useState('Boulangerie Gourmet');
+
+  // Controle de fila offline e estado de conexão
+  const [offlineQueue, setOfflineQueue] = useState<PendingWrite[]>([]);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToQueue((queue, online) => {
+      setOfflineQueue(queue);
+      setIsOnline(online);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Mesclar dados locais pendentes na fila offline com os dados em tempo real para a UI
+  const { insumos: resilientInsumos, produtos: resilientProdutos, vendas: resilientVendas } = loggedUser
+    ? mergePendingQueue(loggedUser.id, insumos, produtos, vendas, offlineQueue)
+    : { insumos, produtos, vendas };
+
+  const resilientBusinessName = loggedUser
+    ? mergePendingProfile(loggedUser.id, businessName, offlineQueue)
+    : businessName;
 
   // Subscrever e sincronizar insumos em tempo real
   useEffect(() => {
@@ -46,7 +68,7 @@ export default function App() {
       });
 
       if (snapshot.empty) {
-        if (!loggedUser.seeded) {
+        if (!loggedUser.seededInsumos) {
           INSUMOS_INICIAIS.forEach(async (item) => {
             try {
               await setDoc(doc(db, path, item.id), item);
@@ -56,9 +78,8 @@ export default function App() {
           });
           setInsumos(INSUMOS_INICIAIS);
           setDoc(doc(db, 'usuarios', loggedUser.id), {
-            ...loggedUser,
-            seeded: true
-          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seeded:", err));
+            seededInsumos: true
+          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seededInsumos:", err));
         } else {
           setInsumos([]);
         }
@@ -88,7 +109,7 @@ export default function App() {
       });
 
       if (snapshot.empty) {
-        if (!loggedUser.seeded) {
+        if (!loggedUser.seededProdutos) {
           PRODUTOS_INICIAIS.forEach(async (item) => {
             try {
               await setDoc(doc(db, path, item.id), item);
@@ -98,9 +119,8 @@ export default function App() {
           });
           setProdutos(PRODUTOS_INICIAIS);
           setDoc(doc(db, 'usuarios', loggedUser.id), {
-            ...loggedUser,
-            seeded: true
-          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seeded:", err));
+            seededProdutos: true
+          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seededProdutos:", err));
         } else {
           setProdutos([]);
         }
@@ -130,7 +150,7 @@ export default function App() {
       });
 
       if (snapshot.empty) {
-        if (!loggedUser.seeded) {
+        if (!loggedUser.seededVendas) {
           VENDAS_INICIAIS.forEach(async (item) => {
             try {
               await setDoc(doc(db, path, item.id), item);
@@ -140,9 +160,8 @@ export default function App() {
           });
           setVendas(VENDAS_INICIAIS);
           setDoc(doc(db, 'usuarios', loggedUser.id), {
-            ...loggedUser,
-            seeded: true
-          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seeded:", err));
+            seededVendas: true
+          }, { merge: true }).catch((err) => console.error("Erro ao atualizar seededVendas:", err));
         } else {
           setVendas([]);
         }
@@ -170,7 +189,6 @@ export default function App() {
     if (!loggedUser) return;
     try {
       await setDoc(doc(db, 'usuarios', loggedUser.id), {
-        ...loggedUser,
         businessName: novoNome
       }, { merge: true });
     } catch (error) {
@@ -247,7 +265,7 @@ export default function App() {
     if (!loggedUser) return;
     const path = `usuarios/${loggedUser.id}/produtos`;
     try {
-      const prodFind = produtos.find(p => p.id === id);
+      const prodFind = resilientProdutos.find(p => p.id === id);
       if (prodFind) {
         await setDoc(doc(db, path, id), {
           ...prodFind,
@@ -287,7 +305,7 @@ export default function App() {
     try {
       await deleteDoc(doc(db, pathInsumos, id));
 
-      for (const prod of produtos) {
+      for (const prod of resilientProdutos) {
         const hasIngredient = prod.ingredientes.some((ing) => ing.insumoId === id);
         if (hasIngredient) {
           const cleanIngredientes = prod.ingredientes.filter((ing) => ing.insumoId !== id);
@@ -313,7 +331,7 @@ export default function App() {
       if (baixarEstoque) {
         const prodId = novaVenda.produtoId;
         const qtdVenda = novaVenda.quantidade;
-        const prod = produtos.find((p) => p.id === prodId);
+        const prod = resilientProdutos.find((p) => p.id === prodId);
         if (prod) {
           const novoEstoque = Math.max(0, prod.estoqueAtual - qtdVenda);
           await setDoc(doc(db, pathProdutos, prodId), {
@@ -352,11 +370,11 @@ export default function App() {
       case 'destaques':
         return (
           <VisaoGeral
-            insumos={insumos}
-            produtos={produtos}
-            vendas={vendas}
+            insumos={resilientInsumos}
+            produtos={resilientProdutos}
+            vendas={resilientVendas}
             setActiveTab={setActiveTab}
-            businessName={businessName}
+            businessName={resilientBusinessName}
             setBusinessName={persistirBusinessName}
             onResetData={handleResetData}
           />
@@ -364,8 +382,8 @@ export default function App() {
       case 'estoque':
         return (
           <EstoqueProdutos
-            produtos={produtos}
-            insumos={insumos}
+            produtos={resilientProdutos}
+            insumos={resilientInsumos}
             onAddProduto={handleAddProduto}
             onEditProduto={handleEditProduto}
             onDeleteProduto={handleDeleteProduto}
@@ -375,7 +393,7 @@ export default function App() {
       case 'insumos':
         return (
           <CadastroInsumos
-            insumos={insumos}
+            insumos={resilientInsumos}
             onAddInsumo={handleAddInsumo}
             onEditInsumo={handleEditInsumo}
             onDeleteInsumo={handleDeleteInsumo}
@@ -384,9 +402,9 @@ export default function App() {
       case 'vendas':
         return (
           <HistoricoVendas
-            vendas={vendas}
-            produtos={produtos}
-            insumos={insumos}
+            vendas={resilientVendas}
+            produtos={resilientProdutos}
+            insumos={resilientInsumos}
             onAddVenda={handleAddVenda}
             onDeleteVenda={handleDeleteVenda}
           />
@@ -394,9 +412,9 @@ export default function App() {
       case 'analises':
         return (
           <AnaliticaPrevisoes
-            insumos={insumos}
-            produtos={produtos}
-            vendas={vendas}
+            insumos={resilientInsumos}
+            produtos={resilientProdutos}
+            vendas={resilientVendas}
             onEditProduto={handleEditProduto}
             onAddVenda={handleAddVenda}
           />
@@ -414,8 +432,8 @@ export default function App() {
         tabs={tabs}
         overlay={
           <AcaoRapida
-            insumos={insumos}
-            produtos={produtos}
+            insumos={resilientInsumos}
+            produtos={resilientProdutos}
             onAddVenda={handleAddVenda}
             onAddInsumo={handleAddInsumo}
             onUpdateEstoque={handleUpdateEstoque}

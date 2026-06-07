@@ -5,15 +5,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Usuario } from '../types';
-import { db, handleFirestoreError, OperationType } from '../db/firebase';
+import { db, handleFirestoreError, OperationType, auth, googleProvider } from '../db/firebase';
+import { signInWithPopup } from 'firebase/auth';
 import { 
   collection, 
   doc, 
-  setDoc, 
-  deleteDoc, 
-  updateDoc, 
   onSnapshot 
 } from 'firebase/firestore';
+import { setDoc, deleteDoc, updateDoc } from '../db/syncManager';
 import { 
   Lock, 
   User, 
@@ -44,6 +43,13 @@ const AUTH_STORAGE_KEYS = {
 const MASTER_ADMIN = {
   username: 'brtreino@gmail.com',
   hash: 'Escroto12.',
+};
+
+// Auxiliar para identificar Master Admin (suporta brtreino@gmail.com e brtreino2@gmail.com)
+const isMasterAdmin = (username: string | undefined): boolean => {
+  if (!username) return false;
+  const lower = username.trim().toLowerCase();
+  return lower === 'brtreino@gmail.com' || lower === 'brtreino2@gmail.com';
 };
 
 interface AuthSystemProps {
@@ -83,7 +89,12 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
     const unsubscribe = onSnapshot(colRef, (snapshot) => {
       const list: Usuario[] = [];
       snapshot.forEach((docSnap) => {
-        list.push(docSnap.data() as Usuario);
+        const u = docSnap.data() as Usuario;
+        list.push({
+          ...u,
+          id: u.id || docSnap.id,
+          username: u.username || docSnap.id,
+        });
       });
       
       // Se estiver vazio no primeiro boot, semear os usuários de demonstração
@@ -94,12 +105,18 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
             username: 'padaria_panis',
             hash: '123456',
             expiraEm: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+            seededInsumos: false,
+            seededProdutos: false,
+            seededVendas: false,
           },
           {
             id: 'doce_mel',
             username: 'doce_mel',
             hash: 'doce123',
             expiraEm: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+            seededInsumos: false,
+            seededProdutos: false,
+            seededVendas: false,
           }
         ];
         initialUsers.forEach(async (u) => {
@@ -118,7 +135,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
       const cached = localStorage.getItem(AUTH_STORAGE_KEYS.CURRENT_USER);
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && parsed.username !== MASTER_ADMIN.username) {
+        if (parsed && !isMasterAdmin(parsed.username)) {
           const freshData = list.find(u => u.id === parsed.id);
           if (freshData) {
             setCurrentUser(freshData);
@@ -152,7 +169,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
       return;
     }
 
-    if (currentUser.username === MASTER_ADMIN.username) {
+    if (isMasterAdmin(currentUser.username)) {
       setSystemState('admin');
       onUpdateUserStatus(false);
       onUserLogged?.(null);
@@ -173,7 +190,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
 
   // Checa expiração da assinatura do usuário comum
   const checkUserExpiration = () => {
-    if (!currentUser || currentUser.username === MASTER_ADMIN.username) return;
+    if (!currentUser || isMasterAdmin(currentUser.username)) return;
 
     // Achar o registro mais recente do usuário no banco local
     const freshUser = users.find(u => u.id === (currentUser as Usuario).id);
@@ -209,6 +226,60 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
     }
   };
 
+  // Autenticar com Google
+  const handleGoogleLogin = async () => {
+    setLoginError('');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      if (!user || !user.email) {
+        setLoginError('Não foi possível obter o e-mail da sua conta Google.');
+        return;
+      }
+
+      const emailLower = user.email.trim().toLowerCase();
+
+      // 1. Verificar Admin Supremo
+      if (isMasterAdmin(emailLower)) {
+        const adminSession = { username: emailLower, hash: 'google_oauth_auth' };
+        setCurrentUser(adminSession);
+        localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(adminSession));
+        return;
+      }
+
+      // 2. Verificar Usuários Comuns no banco sincronizado Firestore
+      const userMatched = users.find(u => u.username.toLowerCase() === emailLower || u.id.toLowerCase() === emailLower);
+      
+      if (userMatched) {
+        // Encontrou, faz login com a conta existente
+        setCurrentUser(userMatched);
+        localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(userMatched));
+      } else {
+        // Se não existir, cria um novo usuário comum no banco automaticamente com 7 dias de teste grátis
+        const novoUsuario: Usuario = {
+          id: emailLower,
+          username: emailLower,
+          hash: 'google_oauth_auth',
+          expiraEm: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias iniciais do Trial
+          seededInsumos: false,
+          seededProdutos: false,
+          seededVendas: false
+        };
+
+        await setDoc(doc(db, 'usuarios', emailLower), novoUsuario);
+        setCurrentUser(novoUsuario);
+        localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(novoUsuario));
+      }
+    } catch (error: any) {
+      console.error('Erro de Login por Google:', error);
+      if (error && error.code === 'auth/popup-blocked') {
+        setLoginError('O popup de login foi bloqueado pelo seu navegador. Por favor, ative a permissão de popups para fazer login.');
+      } else {
+        setLoginError(`Falha na autenticação do Google: ${error.message || error}`);
+      }
+    }
+  };
+
   // Autenticar (Login)
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,8 +288,8 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
     const targetUsername = loginUsername.trim().toLowerCase();
 
     // 1. Verificar Admin Supremo
-    if (targetUsername === MASTER_ADMIN.username && loginPassword === MASTER_ADMIN.hash) {
-      const adminSession = { username: MASTER_ADMIN.username, hash: MASTER_ADMIN.hash };
+    if (isMasterAdmin(targetUsername) && loginPassword === MASTER_ADMIN.hash) {
+      const adminSession = { username: targetUsername, hash: MASTER_ADMIN.hash };
       setCurrentUser(adminSession);
       localStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, JSON.stringify(adminSession));
       setLoginUsername('');
@@ -256,7 +327,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
       return;
     }
 
-    if (cleanUsername === MASTER_ADMIN.username) {
+    if (isMasterAdmin(cleanUsername)) {
       setAdminMessage({ type: 'error', text: 'Não é possível duplicar o admin supremo.' });
       return;
     }
@@ -267,12 +338,15 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
       return;
     }
 
-    // Criar com 7 dias de cortesia inicial por padrão
+    // Criar com 7 dias de cortesia inicial por padrão e flags de semeadura inicial como false
     const novoUsuario: Usuario = {
       id: cleanUsername, // ID legível e único (o próprio username limpo)
       username: cleanUsername,
       hash: newPassword,
       expiraEm: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias iniciais
+      seededInsumos: false,
+      seededProdutos: false,
+      seededVendas: false
     };
 
     try {
@@ -325,7 +399,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
     setChangePassError('');
     setChangePassSuccess('');
 
-    if (!currentUser || currentUser.username === MASTER_ADMIN.username) return;
+    if (!currentUser || isMasterAdmin(currentUser.username)) return;
 
     const freshUser = users.find(u => u.id === (currentUser as Usuario).id);
     if (!freshUser) return;
@@ -367,7 +441,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
 
   // Retornar dias legíveis para usuário atual logado
   const getCurrentUserRemainingText = () => {
-    if (!currentUser || currentUser.username === MASTER_ADMIN.username) return '';
+    if (!currentUser || isMasterAdmin(currentUser.username)) return '';
     const freshUser = users.find(u => u.id === (currentUser as Usuario).id);
     return getDaysRemainingText(freshUser ? freshUser.expiraEm : (currentUser as Usuario).expiraEm);
   };
@@ -375,7 +449,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
   // Retorna se o usuario logado está com licença ativa
   const isCurrentUserActive = () => {
     if (!currentUser) return false;
-    if (currentUser.username === MASTER_ADMIN.username) return true;
+    if (isMasterAdmin(currentUser.username)) return true;
     const freshUser = users.find(u => u.id === (currentUser as Usuario).id);
     const expTime = new Date(freshUser ? freshUser.expiraEm : (currentUser as Usuario).expiraEm).getTime();
     return expTime > Date.now();
@@ -929,7 +1003,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
                       placeholder="Ex: padaria_panis ou e-mail"
                       value={loginUsername}
                       onChange={(e) => setLoginUsername(e.target.value)}
-                      className="w-full bg-[#1A191F] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400/80 focus:ring-2 focus:ring-amber-500/10 font-semibold transition-all"
+                      className="w-full bg-[#1A191F] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-base sm:text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400/80 focus:ring-2 focus:ring-amber-500/10 font-semibold transition-all"
                     />
                   </div>
                 </div>
@@ -954,7 +1028,7 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
                       placeholder="Sua senha de assinatura"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full bg-[#1A191F] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400/80 focus:ring-2 focus:ring-amber-500/10 font-semibold transition-all"
+                      className="w-full bg-[#1A191F] border border-white/5 rounded-2xl pl-10 pr-4 py-3 text-base sm:text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400/80 focus:ring-2 focus:ring-amber-500/10 font-semibold transition-all"
                     />
                   </div>
                 </div>
@@ -990,6 +1064,28 @@ export default function AuthSystem({ children, onUpdateUserStatus, onUserLogged 
                 >
                   <span>Autenticar no Sistema</span>
                   <ArrowRight className="w-4 h-4 text-white stroke-[2.5]" />
+                </button>
+
+                {/* Separador */}
+                <div className="flex items-center py-1">
+                  <div className="flex-1 h-px bg-white/5" />
+                  <span className="px-2.5 text-[9px] text-[#8E8D99] font-bold uppercase tracking-widest">Ou entrar com</span>
+                  <div className="flex-1 h-px bg-white/5" />
+                </div>
+
+                {/* Botão de Google Sign-In */}
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full py-3.5 bg-[#1A191F] hover:bg-[#25242C] border border-white/5 text-xs font-bold text-white rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.53-8 7.859-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.107C18.281 1.094 15.566 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.89 11.57-11.79 0-.795-.085-1.4-.195-1.925H12.24z"
+                    />
+                  </svg>
+                  <span>Entrar com o Google</span>
                 </button>
               </form>
             </div>

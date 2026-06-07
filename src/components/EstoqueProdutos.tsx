@@ -382,7 +382,7 @@ export default function EstoqueProdutos({
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     placeholder="Ex: Torta de Limão Gourmet"
-                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                   />
                 </div>
 
@@ -394,7 +394,7 @@ export default function EstoqueProdutos({
                       id="form-prod-cat"
                       value={categoria}
                       onChange={(e) => setCategoria(e.target.value)}
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] text-white"
                     >
                       {CATEGORIAS_PADRAO.map((cat) => (
                         <option key={cat} value={cat}>
@@ -414,7 +414,7 @@ export default function EstoqueProdutos({
                       value={precoVenda}
                       onChange={(e) => setPrecoVenda(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                     />
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export default function EstoqueProdutos({
                     value={descricao}
                     onChange={(e) => setDescricao(e.target.value)}
                     placeholder="Ex: Base crocante com ganache de cacau."
-                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                    className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                   />
                 </div>
 
@@ -443,7 +443,7 @@ export default function EstoqueProdutos({
                       value={estoqueAtual}
                       onChange={(e) => setEstoqueAtual(e.target.value)}
                       placeholder="20"
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                     />
                   </div>
 
@@ -456,7 +456,7 @@ export default function EstoqueProdutos({
                       value={estoqueMinimo}
                       onChange={(e) => setEstoqueMinimo(e.target.value)}
                       placeholder="5"
-                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF]"
+                      className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF]"
                     />
                   </div>
                 </div>
@@ -523,7 +523,7 @@ export default function EstoqueProdutos({
                               id={`ing-select-${idx}`}
                               value={ing.insumoId}
                               onChange={(e) => atualizarIngrediente(idx, 'insumoId', e.target.value)}
-                              className="bg-black text-xs rounded-lg px-2 py-1.5 border border-white/5 focus:outline-none flex-1 font-semibold text-white"
+                              className="bg-black text-base sm:text-xs rounded-lg px-2 py-1.5 border border-white/5 focus:outline-none flex-1 font-semibold text-white"
                             >
                               {insumos.map((ins) => (
                                 <option key={ins.id} value={ins.id}>
@@ -542,7 +542,7 @@ export default function EstoqueProdutos({
                                 value={ing.quantidadeNecessaria || ''}
                                 onChange={(e) => atualizarIngrediente(idx, 'quantidadeNecessaria', Number(e.target.value))}
                                 placeholder="Fatia"
-                                className="bg-black border border-white/5 text-xs rounded-lg pl-2 pr-7 py-1.5 focus:outline-none w-full font-bold text-center text-white"
+                                className="bg-black border border-white/5 text-base sm:text-xs rounded-lg pl-2 pr-7 py-1.5 focus:outline-none w-full font-bold text-center text-white"
                               />
                               <span className="absolute right-2 text-[10px] text-[#8E8E93] font-bold uppercase select-none">
                                 {insumoAtual?.unidadeMedida || ''}

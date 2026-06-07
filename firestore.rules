@@ -12,6 +12,14 @@ service cloud.firestore {
       return id is string && id.size() <= 128;
     }
 
+    // Helper to check if a user is an admin or has an active subscription license
+    function isLicenseActive(usuarioId) {
+      return usuarioId == 'brtreino@gmail.com' 
+        || usuarioId == 'brtreino2@gmail.com'
+        || (exists(/databases/$(database)/documents/usuarios/$(usuarioId)) 
+            && timestamp.value(get(/databases/$(database)/documents/usuarios/$(usuarioId)).data.expiraEm) >= request.time);
+    }
+
     // Custom accounts collection
     match /usuarios/{usuarioId} {
       allow get, create, update, delete: if isValidId(usuarioId);
@@ -19,18 +27,18 @@ service cloud.firestore {
 
       // Scoped Subcollections per active user sandbox
       match /insumos/{insumoId} {
-        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(insumoId);
-        allow list: if isValidId(usuarioId);
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(insumoId) && isLicenseActive(usuarioId);
+        allow list: if isValidId(usuarioId) && isLicenseActive(usuarioId);
       }
 
       match /produtos/{produtoId} {
-        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(produtoId);
-        allow list: if isValidId(usuarioId);
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(produtoId) && isLicenseActive(usuarioId);
+        allow list: if isValidId(usuarioId) && isLicenseActive(usuarioId);
       }
 
       match /vendas/{vendaId} {
-        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(vendaId);
-        allow list: if isValidId(usuarioId);
+        allow get, create, update, delete: if isValidId(usuarioId) && isValidId(vendaId) && isLicenseActive(usuarioId);
+        allow list: if isValidId(usuarioId) && isLicenseActive(usuarioId);
       }
     }
   }

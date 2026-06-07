@@ -295,7 +295,7 @@ export default function HistoricoVendas({
                         id="form-sale-prod"
                         value={produtoId}
                         onChange={(e) => handleProdutoChange(e.target.value)}
-                        className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#0A84FF] font-semibold"
+                        className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white focus:outline-none focus:border-[#0A84FF] font-semibold"
                         required
                       >
                         {produtos.map((p) => (
@@ -318,7 +318,7 @@ export default function HistoricoVendas({
                           value={quantidade}
                           onChange={(e) => setQuantidade(e.target.value)}
                           placeholder="1"
-                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF] font-bold text-white"
+                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] font-bold text-white"
                         />
                       </div>
 
@@ -332,7 +332,7 @@ export default function HistoricoVendas({
                           value={precoPersonalizado}
                           onChange={(e) => setPrecoPersonalizado(e.target.value)}
                           placeholder="0.00"
-                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0A84FF] font-semibold text-white"
+                          className="w-full bg-black border border-white/5 rounded-xl px-3.5 py-2.5 text-base sm:text-sm focus:outline-none focus:border-[#0A84FF] font-semibold text-white"
                         />
                       </div>
                     </div>

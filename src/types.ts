@@ -52,5 +52,8 @@ export interface Usuario {
   expiraEm: string; // ISO date-time string
   businessName?: string;
   seeded?: boolean;
+  seededInsumos?: boolean;
+  seededProdutos?: boolean;
+  seededVendas?: boolean;
 }
 
